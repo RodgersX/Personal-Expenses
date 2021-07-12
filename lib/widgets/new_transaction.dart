@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class NewTransaction extends StatefulWidget {
   final Function addTx;
@@ -10,53 +11,102 @@ class NewTransaction extends StatefulWidget {
 }
 
 class _NewTransactionState extends State<NewTransaction> {
-  final titleController = TextEditingController();
+  final _titleController = TextEditingController();
+  final _amountEditingController = TextEditingController();
+  var _selectedDate;
 
-  final amountEditingController = TextEditingController();
+  void _submitData() {
+    if (_amountEditingController.text.isEmpty) {
+      return;
+    }
+    final _enteredTitle = _titleController.text;
+    final _enteredAmount = double.parse(_amountEditingController.text);
 
-  void submitData() {
-    final enteredTitle = titleController.text;
-    final enteredAmount = double.parse(amountEditingController.text);
-
-    if (enteredTitle.isEmpty || enteredAmount <= 0) {
+    if (_enteredTitle.isEmpty || _enteredAmount <= 0 || _selectedDate == null) {
       return;
     }
     widget.addTx(
-      titleController.text,
-      double.parse(amountEditingController.text),
+      _titleController.text,
+      double.parse(_amountEditingController.text),
+      _selectedDate,
     );
-    
+
     // Closes the modal sheet
     Navigator.of(context).pop();
   }
 
+  void _presentDatePicker() async {
+    var pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2019),
+      lastDate: DateTime.now(),
+    );
+    if (pickedDate == null) {
+      return;
+    }
+    setState(() {
+      _selectedDate = pickedDate;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Container(
-        padding: EdgeInsets.all(10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            TextField(
-              decoration: InputDecoration(labelText: 'Title'),
-              controller: titleController,
-              onSubmitted: (_) => submitData(),
-            ),
-            TextField(
-              decoration: InputDecoration(labelText: 'Amount'),
-              controller: amountEditingController,
-              keyboardType: TextInputType.number,
-              onSubmitted: (_) =>
-                  submitData(), // accept a value but don't use it. Use underscore
-            ),
-            // ignore: deprecated_member_use
-            FlatButton(
-              child: Text('Add Transcaction'),
-              textColor: Colors.purple,
-              onPressed: submitData,
-            )
-          ],
+    return SingleChildScrollView(
+      child: Card(
+        child: Container(
+          padding: EdgeInsets.only(
+            top: 10,
+            left: 10,
+            right: 10,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 10,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              TextField(
+                decoration: InputDecoration(labelText: 'Title'),
+                controller: _titleController,
+                onSubmitted: (_) => _submitData(),
+              ),
+              TextField(
+                decoration: InputDecoration(labelText: 'Amount'),
+                controller: _amountEditingController,
+                keyboardType: TextInputType.number,
+                onSubmitted: (_) =>
+                    _submitData(), // accept a value but don't use it. Use underscore
+              ),
+              Container(
+                height: 70,
+                child: Row(
+                  children: [
+                    // ignore: unnecessary_null_comparison
+                    Expanded(
+                      child: Text(_selectedDate == null
+                          ? 'No Date Chosen!'
+                          : 'Picked date: ${DateFormat.yMd().format(_selectedDate)}'),
+                    ),
+                    // ignore: deprecated_member_use
+                    FlatButton(
+                      textColor: Theme.of(context).primaryColor,
+                      onPressed: _presentDatePicker,
+                      child: Text(
+                        'Choose date',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    )
+                  ],
+                ),
+              ),
+              // ignore: deprecated_member_use
+              RaisedButton(
+                child: Text('Add Transcaction'),
+                color: Theme.of(context).primaryColor,
+                textColor: Theme.of(context).textTheme.button!.color,
+                onPressed: _submitData,
+              )
+            ],
+          ),
         ),
       ),
     );

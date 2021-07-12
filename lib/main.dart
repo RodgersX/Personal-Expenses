@@ -1,5 +1,7 @@
+import 'dart:io';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import './widgets/new_transaction.dart';
 import './widgets/transaction_list.dart';
@@ -7,11 +9,9 @@ import './widgets/chart.dart';
 import './models/transaction.dart';
 
 void main() {
-  // set screen orientation for your app
-  // WidgetsFlutterBinding.ensureInitialized();
   // SystemChrome.setPreferredOrientations([
   //   DeviceOrientation.portraitUp,
-  //   DeviceOrientation.portraitDown,
+  //   DeviceOrientation.portraitUp,
   // ]);
   runApp(MyApp());
 }
@@ -20,7 +20,6 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
       title: 'Personal Expenses',
       theme: ThemeData(
           primarySwatch: Colors.purple,
@@ -28,7 +27,7 @@ class MyApp extends StatelessWidget {
           // errorColor: Colors.red,
           fontFamily: 'Quicksand',
           textTheme: ThemeData.light().textTheme.copyWith(
-                title: TextStyle(
+                headline6: TextStyle(
                   fontFamily: 'OpenSans',
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
@@ -37,7 +36,7 @@ class MyApp extends StatelessWidget {
               ),
           appBarTheme: AppBarTheme(
             textTheme: ThemeData.light().textTheme.copyWith(
-                  title: TextStyle(
+                  headline6: TextStyle(
                     fontFamily: 'OpenSans',
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -58,20 +57,19 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final List<Transaction> _userTransactions = [
-    Transaction(
-      id: 't1',
-      title: 'New Shoes',
-      amount: 69.99,
-      date: DateTime.now(),
-    ),
-    Transaction(
-      id: 't2',
-      title: 'Weekly Groceries',
-      amount: 16.53,
-      date: DateTime.now(),
-    ),
+    // Transaction(
+    //   id: 't1',
+    //   title: 'New Shoes',
+    //   amount: 69.99,
+    //   date: DateTime.now(),
+    // ),
+    // Transaction(
+    //   id: 't2',
+    //   title: 'Weekly Groceries',
+    //   amount: 16.53,
+    //   date: DateTime.now(),
+    // ),
   ];
-
   bool _showChart = false;
 
   List<Transaction> get _recentTransactions {
@@ -111,7 +109,7 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  void _d(String id) {
+  void _deleteTransaction(String id) {
     setState(() {
       _userTransactions.removeWhere((tx) => tx.id == id);
     });
@@ -121,7 +119,6 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
     final isLandscape = mediaQuery.orientation == Orientation.landscape;
-
     final appBar = AppBar(
       title: Text(
         'Personal Expenses',
@@ -133,18 +130,15 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ],
     );
-
     final txListWidget = Container(
       height: (mediaQuery.size.height -
               appBar.preferredSize.height -
               mediaQuery.padding.top) *
           0.7,
-      child: TransactionList(_userTransactions, _d),
+      child: TransactionList(_userTransactions, _deleteTransaction),
     );
-
-    return Scaffold(
-      appBar: appBar,
-      body: SingleChildScrollView(
+    final pageBody = SafeArea(
+      child: SingleChildScrollView(
         child: Column(
           // mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -152,16 +146,21 @@ class _MyHomePageState extends State<MyHomePage> {
             if (isLandscape)
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('Show Chart'),
-                  Switch(
+                children: <Widget>[
+                  Text(
+                    'Show Chart',
+                    // ignore: deprecated_member_use
+                    style: Theme.of(context).textTheme.title,
+                  ),
+                  Switch.adaptive(
+                    activeColor: Theme.of(context).accentColor,
                     value: _showChart,
                     onChanged: (val) {
                       setState(() {
                         _showChart = val;
                       });
                     },
-                  )
+                  ),
                 ],
               ),
             if (!isLandscape)
@@ -169,7 +168,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 height: (mediaQuery.size.height -
                         appBar.preferredSize.height -
                         mediaQuery.padding.top) *
-                    .3,
+                    0.3,
                 child: Chart(_recentTransactions),
               ),
             if (!isLandscape) txListWidget,
@@ -178,19 +177,25 @@ class _MyHomePageState extends State<MyHomePage> {
                   ? Container(
                       height: (mediaQuery.size.height -
                               appBar.preferredSize.height -
-                              MediaQuery.of(context).padding.top) *
-                          .7,
+                              mediaQuery.padding.top) *
+                          0.7,
                       child: Chart(_recentTransactions),
                     )
                   : txListWidget
           ],
         ),
       ),
+    );
+    return Scaffold(
+      appBar: appBar,
+      body: pageBody,
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
-        onPressed: () => _startAddNewTransaction(context),
-      ),
+      floatingActionButton: Platform.isIOS
+          ? Container()
+          : FloatingActionButton(
+              child: Icon(Icons.add),
+              onPressed: () => _startAddNewTransaction(context),
+            ),
     );
   }
 }

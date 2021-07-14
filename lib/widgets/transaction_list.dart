@@ -17,7 +17,7 @@ class TransactionList extends StatelessWidget {
               children: [
                 Text('No transactions added yet',
                     style: Theme.of(context).textTheme.headline6),
-                const SizedBox(
+                const SizedBox( // const keyword to avoid the widget being redrawn every time build method runs
                   height: 10,
                 ),
                 Container(
@@ -30,11 +30,13 @@ class TransactionList extends StatelessWidget {
               ],
             );
           })
-        : ListView.builder(
-            itemBuilder: (ctx, index) {
-              return TransactionItem(transaction: transactions[index], deleteTx: deleteTx);
-            },
-            itemCount: transactions.length,
-          );
+        : ListView(
+            children: transactions // use the spread operator(...) when you have more than one element in the list
+                .map((tx) => TransactionItem(
+                      key: ValueKey(tx.id),
+                      transaction: tx,
+                      deleteTx: deleteTx,
+                    ))
+                .toList());
   }
 }
